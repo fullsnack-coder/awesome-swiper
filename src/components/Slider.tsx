@@ -1,4 +1,4 @@
-import { Navigation, Virtual } from "swiper"
+import SwiperCore, { Navigation, Virtual } from "swiper"
 
 import {
   Swiper,
@@ -10,42 +10,51 @@ import {
 import "swiper/css"
 import "swiper/css/navigation"
 import "swiper/css/virtual"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 type Props = {
   data: any[]
   renderHeader?: (currentIndex: number, total: number) => React.ReactNode
   renderItem?: (item: any) => React.ReactNode
   containerProps?: SwiperSlideProps
-  defaultIndex?: number
-} & Omit<SwiperProps, "initialSlide">
+} & SwiperProps
 
 const Slider: React.FC<Props> = ({
   containerProps,
   data,
+  initialSlide,
   renderHeader,
   renderItem,
   ...rest
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [controlledSwiper, setControlledSwiper] = useState<SwiperCore>()
+
+  useEffect(() => {
+    if (initialSlide !== undefined && controlledSwiper) {
+      setCurrentIndex(initialSlide)
+      controlledSwiper.slideTo(initialSlide)
+    }
+  }, [initialSlide, controlledSwiper])
 
   return (
     <section className="slider-wrapper">
       {renderHeader?.(currentIndex, data.length)}
-      <Swiper
-        modules={[Navigation, Virtual]}
-        onSlideChange={({ activeIndex }) => {
-          setCurrentIndex(activeIndex)
-          console.log("changing...", activeIndex)
-        }}
-        {...rest}
-      >
-        {data.map((item, index) => (
-          <SwiperSlide key={index} virtualIndex={index} {...containerProps}>
-            {renderItem?.(item)}
-          </SwiperSlide>
-        ))}
-      </Swiper>
+      {data.length > 0 ? (
+        <Swiper
+          onSwiper={setControlledSwiper}
+          modules={[Navigation, Virtual]}
+          onSlideChange={({ activeIndex }) => setCurrentIndex(activeIndex)}
+          initialSlide={initialSlide}
+          {...rest}
+        >
+          {data.map((item, index) => (
+            <SwiperSlide key={index} virtualIndex={index} {...containerProps}>
+              {renderItem?.(item)}
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      ) : null}
     </section>
   )
 }

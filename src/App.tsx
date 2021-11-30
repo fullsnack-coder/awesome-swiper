@@ -7,7 +7,7 @@ import { getImages, Image } from "./services"
 function App() {
   const [images, setImages] = useState<Image[]>([])
   const [slidesPerView, setSlidesPerView] = useState(1)
-  const [initialSlide, setInitialSlide] = useState(3)
+  const [initialSlide, setInitialSlide] = useState(6)
 
   useEffect(() => {
     getImages().then(setImages)
@@ -21,6 +21,7 @@ function App() {
       <button onClick={() => setSlidesPerView((prev) => prev + 1)}>
         add slides
       </button>
+
       <Slider
         renderHeader={(currentSlide, totalSlides) => (
           <header>
@@ -30,6 +31,7 @@ function App() {
         )}
         virtual
         navigation
+        initialSlide={initialSlide}
         slidesPerGroup={slidesPerView}
         slidesPerView={slidesPerView}
         className="app__slider"
