@@ -1,0 +1,15 @@
+.App {
+  text-align: center;
+}
+
+.app__image {
+  height: 600px;
+  width: 600px;
+  margin: 0 auto;
+}
+
+.app__image img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
