@@ -10,8 +10,11 @@ const App: React.FC = () => {
   const [initialSlide, setInitialSlide] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const [useAltered, setUseAltered] = useState(false)
   const [pageNumber, setPageNumber] = useState("1")
   const sliderRef = useRef<SliderRef>(null)
+
+  const alteredImages = images.filter((_, i) => i < 10)
 
   useEffect(() => {
     getImages().then(setImages)
@@ -20,8 +23,11 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <h1>hello from vite</h1>
-      <button onClick={() => setInitialSlide(0)}>initial slide</button>
+      <button onClick={() => setInitialSlide(10)}>initial slide</button>
       <button onClick={() => setSlidesPerView(1)}>reset</button>
+      <button onClick={() => setUseAltered((prevUse) => !prevUse)}>
+        toggle images
+      </button>
       <button onClick={() => setSlidesPerView((prev) => prev + 1)}>
         add slides
       </button>
@@ -60,7 +66,7 @@ const App: React.FC = () => {
         slidesPerGroup={slidesPerView}
         slidesPerView={slidesPerView}
         className="app__slider"
-        data={images}
+        data={useAltered ? alteredImages : images}
         renderItem={(image) => {
           return (
             <div className="app__image">
