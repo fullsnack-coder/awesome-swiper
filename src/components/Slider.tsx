@@ -10,53 +10,89 @@ import {
 import "swiper/css"
 import "swiper/css/navigation"
 import "swiper/css/virtual"
-import { useEffect, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useImperativeHandle,
+  forwardRef,
+} from "react"
 
 type Props = {
   data: any[]
   renderHeader?: (currentIndex: number, total: number) => React.ReactNode
   renderItem?: (item: any) => React.ReactNode
   containerProps?: SwiperSlideProps
-} & SwiperProps
+  onChangeSlider?: (index: number) => void
+} & Omit<SwiperProps, "onSlideChange">
 
-const Slider: React.FC<Props> = ({
-  containerProps,
-  data,
-  initialSlide,
-  renderHeader,
-  renderItem,
-  ...rest
-}) => {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [controlledSwiper, setControlledSwiper] = useState<SwiperCore>()
+export type HandledRef = {
+  swipeTo: (index: number) => void
+}
 
-  useEffect(() => {
-    if (initialSlide !== undefined && controlledSwiper) {
-      setCurrentIndex(initialSlide)
-      controlledSwiper.slideTo(initialSlide)
-    }
-  }, [initialSlide, controlledSwiper])
+const Slider = forwardRef<HandledRef, Props>(
+  (
+    {
+      containerProps,
+      data,
+      initialSlide,
+      renderHeader,
+      renderItem,
+      onChangeSlider,
+      ...rest
+    },
+    innerRef
+  ) => {
+    const [currentIndex, setCurrentIndex] = useState(0)
+    const [controlledSwiper, setControlledSwiper] = useState<SwiperCore>()
 
-  return (
-    <section className="slider-wrapper">
-      {renderHeader?.(currentIndex, data.length)}
-      {data.length > 0 ? (
-        <Swiper
-          onSwiper={setControlledSwiper}
-          modules={[Navigation, Virtual]}
-          onSlideChange={({ activeIndex }) => setCurrentIndex(activeIndex)}
-          initialSlide={initialSlide}
-          {...rest}
-        >
-          {data.map((item, index) => (
-            <SwiperSlide key={index} virtualIndex={index} {...containerProps}>
-              {renderItem?.(item)}
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      ) : null}
-    </section>
-  )
+    useImperativeHandle(innerRef, () => ({
+      swipeTo: (index: number) => {
+        if (controlledSwiper)
+          controlledSwiper.slideTo(clamp(index, 0, data.length - 1))
+      },
+    }))
+
+    const handleSlideChange = useCallback(
+      ({ activeIndex }) => {
+        setCurrentIndex(activeIndex)
+        onChangeSlider?.(activeIndex + 1)
+      },
+      [onChangeSlider]
+    )
+
+    useEffect(() => {
+      if (initialSlide !== undefined && controlledSwiper) {
+        setCurrentIndex(initialSlide)
+        controlledSwiper.slideTo(initialSlide)
+      }
+    }, [initialSlide, controlledSwiper])
+
+    return (
+      <section className="slider-wrapper">
+        {renderHeader?.(currentIndex + 1, data.length)}
+        {data.length > 0 ? (
+          <Swiper
+            onSwiper={setControlledSwiper}
+            modules={[Navigation, Virtual]}
+            onSlideChange={handleSlideChange}
+            initialSlide={initialSlide}
+            {...rest}
+          >
+            {data.map((item, index) => (
+              <SwiperSlide key={index} virtualIndex={index} {...containerProps}>
+                {renderItem?.(item)}
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : null}
+      </section>
+    )
+  }
+)
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
 }
 
 export default Slider
